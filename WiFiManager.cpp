@@ -886,18 +886,21 @@ uint8_t WiFiManager::processConfigPortal(){
         #endif
       }
       else{
-        // attempt sta connection to submitted _ssid, _pass
-        uint8_t res = connectWifi(_ssid, _pass, _connectonsave) == WL_CONNECTED;
-        if (res || (!_connectonsave)) {
-          #ifdef WM_DEBUG_LEVEL
-          if(!_connectonsave){
-            DEBUG_WM(F("SAVED with no connect to new AP"));
-          } else {
-            DEBUG_WM(F("Connect to new AP [SUCCESS]"));
-            DEBUG_WM(F("Got IP Address:"));
-            DEBUG_WM(WiFi.localIP());
+        if(_setvaluesinesponsave){
+          // attempt sta connection to submitted _ssid, _pass
+          uint8_t res = connectWifi(_ssid, _pass, _connectonsave) == WL_CONNECTED;
+          if (res || (!_connectonsave)) {
+            #ifdef WM_DEBUG_LEVEL
+            if(!_connectonsave){
+              DEBUG_WM(F("SAVED with no connect to new AP"));
+            } else {
+              DEBUG_WM(F("Connect to new AP [SUCCESS]"));
+              DEBUG_WM(F("Got IP Address:"));
+              DEBUG_WM(WiFi.localIP());
+            }
+            #endif
           }
-          #endif
+        }
 
           if ( _savewificallback != NULL) {
             #ifdef WM_DEBUG_LEVEL
@@ -905,10 +908,16 @@ uint8_t WiFiManager::processConfigPortal(){
             #endif
             _savewificallback(); // @CALLBACK
           }
+          if ( _getwificallback != NULL) {
+            #ifdef WM_DEBUG_LEVEL
+            DEBUG_WM(WM_DEBUG_VERBOSE,F("[CB] _savegetcallback calling"));
+            #endif
+            _getwificallback(_ssid, _pass); // @CALLBACK
+          }
           if(!_connectonsave) return WL_IDLE_STATUS;
           if(_disableConfigPortal) shutdownConfigPortal();
           return WL_CONNECTED; // CONNECT SUCCESS
-        }
+        
         #ifdef WM_DEBUG_LEVEL
         DEBUG_WM(WM_DEBUG_ERROR,F("[ERROR] Connect to new AP Failed"));
         #endif
@@ -924,6 +933,12 @@ uint8_t WiFiManager::processConfigPortal(){
           DEBUG_WM(WM_DEBUG_VERBOSE,F("[CB] WiFi/Param save callback"));
           #endif
           _savewificallback(); // @CALLBACK
+        }
+        if ( _getwificallback != NULL) {
+          #ifdef WM_DEBUG_LEVEL
+          DEBUG_WM(WM_DEBUG_VERBOSE,F("[CB] WiFi/Param get callback"));
+          #endif
+          _getwificallback(_ssid, _pass); // @CALLBACK
         }
         if(_disableConfigPortal) shutdownConfigPortal();
         return WL_CONNECT_FAILED; // CONNECT FAIL
@@ -2710,6 +2725,7 @@ void WiFiManager::setSaveConnectTimeout(unsigned long seconds) {
   _saveTimeout = seconds * 1000;
 }
 
+
 /**
  * Set save portal connect on save option, 
  * if false, will only save credentials not connect
@@ -2718,6 +2734,10 @@ void WiFiManager::setSaveConnectTimeout(unsigned long seconds) {
  */
 void WiFiManager::setSaveConnect(bool connect) {
   _connectonsave = connect;
+}
+
+void WiFiManager::setSaveSet(bool save) {
+  _setvaluesinesponsave = save;
 }
 
 /**
@@ -2829,6 +2849,10 @@ void WiFiManager::setWebServerCallback( std::function<void()> func ) {
  */
 void WiFiManager::setSaveConfigCallback( std::function<void()> func ) {
   _savewificallback = func;
+}
+
+void WiFiManager::setGetConfigCallback( std::function<void(String, String)> func ) {
+  _getwificallback = func;
 }
 
 /**

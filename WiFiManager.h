@@ -312,6 +312,9 @@ class WiFiManager
     //called when wifi settings have been changed and connection was successful ( or setBreakAfterConfig(true) )
     void          setSaveConfigCallback( std::function<void()> func );
 
+    //called when wifi settings have been changed to feed it SSID and pass
+    void          setGetConfigCallback( std::function<void(String, String)> func );
+
     //called when saving params-in-wifi or params before anything else happens (eg wifi)
     void          setPreSaveConfigCallback( std::function<void()> func );
 
@@ -344,6 +347,8 @@ class WiFiManager
     
     // lets you disable automatically connecting after save from webportal
     void          setSaveConnect(bool connect = true);
+
+    void          setSaveSet(bool connect = true);
     
     // toggle debug output
     void          setDebugOutput(boolean debug);
@@ -550,6 +555,7 @@ class WiFiManager
     String        _wifissidprefix         = FPSTR(S_ssidpre); // auto apname prefix prefix+chipid
     int           _cpclosedelay           = 2000; // delay before wifisave, prevents captive portal from closing to fast.
     bool          _cleanConnect           = false; // disconnect before connect in connectwifi, increases stability on connects
+    bool          _setvaluesinesponsave   = true; // connect to wifi when saving creds
     bool          _connectonsave          = true; // connect to wifi when saving creds
     bool          _disableSTA             = false; // disable sta when starting ap, always
     bool          _disableSTAConn         = true;  // disable sta when starting ap, if sta is not connected ( stability )
@@ -830,6 +836,7 @@ protected:
     std::function<void(WiFiManager*)> _apcallback;
     std::function<void()> _webservercallback;
     std::function<void()> _savewificallback;
+    std::function<void(String, String)> _getwificallback;
     std::function<void()> _presavewificallback;
     std::function<void()> _presaveparamscallback;
     std::function<void()> _saveparamscallback;
